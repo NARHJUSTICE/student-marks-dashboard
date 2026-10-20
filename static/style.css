@@ -1,0 +1,575 @@
+/* ============================================================
+   Student Marks Dashboard — stylesheet
+   Mobile-first, clean, no external dependencies.
+   ============================================================ */
+
+:root {
+  --bg: #23bbbb;
+  --panel: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --line: #dbe5f0;
+  --primary: #0f766e;
+  --secondary: #2563eb;
+  --soft: #edf2f7;
+  --danger: #dc2626;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 0.92rem;
+}
+
+.badge {
+  background: #ecfeff;
+  color: #115e59;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+  margin-bottom: 18px;
+}
+
+.card h3 {
+  margin: 0 0 14px 0;
+  font-size: 1.05rem;
+}
+
+/* ---------- Grids ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+/* ---------- Metric cards ---------- */
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin-top: 8px;
+  word-break: break-word;
+  line-height: 1.1;
+}
+
+.metric-trend {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* ---------- Bar chart ---------- */
+
+.bar-chart { margin-top: 4px; }
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bar-label {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  background: #edf2f7;
+  border-radius: 999px;
+  overflow: hidden;
+  height: 12px;
+}
+
+.bar-fill {
+  height: 12px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 999px;
+}
+
+.bar-fill-grade {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+
+.bar-value {
+  font-weight: 700;
+  text-align: right;
+  font-size: 0.88rem;
+}
+
+/* ---------- Legend / mini-stat ---------- */
+
+.legend { display: grid; gap: 8px; }
+
+.mini-stat {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.mini-stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mini-stat strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.1rem;
+}
+
+/* ---------- Form ---------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+input, select, textarea {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: var(--primary);
+  color: white;
+  transition: opacity 0.15s ease;
+}
+
+button:hover { opacity: 0.9; }
+button:active { opacity: 0.8; }
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+/* ---------- Flash messages ---------- */
+
+.flash {
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.flash-success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.flash-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ---------- Table ---------- */
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.table-header h3 { margin: 0; }
+
+.search-box {
+  max-width: 280px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.88rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+  min-width: 760px;
+}
+
+th, td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+th {
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--primary);
+}
+
+.sort-arrow {
+  font-size: 0.7rem;
+  color: var(--primary);
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+
+/* ---------- Status pills ---------- */
+
+.status-pill {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-excellent { background: rgba(34,197,94,0.12); color: #166534; }
+.status-good      { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+.status-average   { background: rgba(245,158,11,0.12); color: #b45309; }
+.status-at-risk   { background: rgba(239,68,68,0.12); color: #991b1b; }
+
+/* ---------- Row action buttons ---------- */
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.action-btn {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.action-btn:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+
+.edit-btn:hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.cancel-btn {
+  padding: 12px 20px;
+  font-size: 0.95rem;
+}
+
+/* ---------- Footer actions ---------- */
+
+.footer {
+  text-align: center;
+  padding: 20px 0 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  font-family: inherit;
+}
+
+.footer-link:hover { text-decoration: underline; }
+
+.reset-btn { color: var(--danger); }
+
+/* ---------- Mobile tweaks ---------- */
+
+@media (max-width: 820px) {
+  .container { padding: 14px; }
+  .title { font-size: 1.5rem; }
+  .metric-value { font-size: 1.4rem; }
+  .two-col { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 90px 1fr 42px; }
+  .badge { font-size: 0.72rem; padding: 6px 10px; }
+  .card { padding: 16px; }
+  .table-header { flex-direction: column; align-items: stretch; }
+  .search-box { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .footer { gap: 12px; }
+}
+
+/* ---------- Print styles ---------- */
+
+@media print {
+  body { background: white; }
+  .container { padding: 0; max-width: 100%; }
+  .no-print { display: none !important; }
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+  .two-col { grid-template-columns: 1fr 1fr; }
+  .grid { grid-template-columns: repeat(4, 1fr); }
+  th, td { font-size: 0.8rem; padding: 6px 8px; }
+  table { min-width: 0; }
+}
+
+/* ---------- App footer ---------- */
+
+.app-footer {
+  margin-top: 24px;
+  padding: 18px 12px 28px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.app-footer-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footer-left strong {
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.footer-left span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.footer-center {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.footer-right {
+  text-align: right;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 700px) {
+  .app-footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .footer-left,
+  .footer-right {
+    text-align: center;
+    align-items: center;
+  }
+}
+
+/* ---------- Collapsible Form (Add Student) ---------- */
+
+details.form-card summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+/* Hide the default triangle marker in WebKit browsers */
+details.form-card summary::-webkit-details-marker {
+  display: none;
+}
+
+details.form-card summary h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+/* Add a subtle color change on hover to indicate clickability */
+details.form-card summary:hover h3 {
+  color: var(--primary);
+}
+
+/* The plus icon */
+details.form-card summary::after {
+  content: "➕";
+  font-size: 14px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+/* The minus icon when open */
+details.form-card[open] summary::after {
+  content: "➖";
+}
+
+/* Add a little spacing below the summary when open */
+details.form-card[open] summary {
+  margin-bottom: 18px;
+}

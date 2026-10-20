@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Marks Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div>
+        <div class="title">Student Marks Dashboard</div>
+        <div class="subtitle">Academic overview, performance trends, and student profile analysis</div>
+      </div>
+      <div class="badge no-print">Live data &middot; {{ summary.total_students }} students</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }} no-print">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- ==================== ADD FORM ==================== -->
+    <details class="card form-card no-print">
+      <summary>
+        <h3>Add a Student</h3>
+      </summary>
+      <form method="POST" action="{{ url_for('add_student') }}">
+        <div class="form-grid">
+          <label>Student ID<input name="student_id" required /></label>
+          <label>Student Name<input name="student_name" required /></label>
+          <label>Age<input name="age" type="number" min="5" max="25" required /></label>
+          <label>Gender
+            <select name="gender">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>Religion<input name="religion" placeholder="e.g. Christianity" /></label>
+          <label>Class<input name="class_name" placeholder="e.g. CSE4" required /></label>
+          <label>Subject<input name="subject" placeholder="e.g. ML" required /></label>
+          <label>Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+          <label>Favourite Subject<input name="favourite_subject" placeholder="e.g. Maths" /></label>
+          <label>Favourite Sports<input name="favourite_sports" placeholder="e.g. Football" /></label>
+          <label>Favourite Teacher<input name="favourite_teacher" placeholder="e.g. Mr. Bello" /></label>
+          <label>Future Career<input name="future_career_plan" placeholder="e.g. Hacker" /></label>
+          <label>Study Period
+            <select name="study_period">
+              <option value="">—</option>
+              <option value="Morning">Morning</option>
+              <option value="Afternoon">Afternoon</option>
+              <option value="Evening">Evening</option>
+              <option value="Night">Night</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit">Add Student</button>
+        </div>
+      </form>
+      <p class="hint">Only ID, Name, Age, Class, Subject, and Marks are required. Everything else is optional.</p>
+    </details>
+
+    <!-- ==================== METRIC CARDS ==================== -->
+    <div class="grid">
+      <div class="card">
+        <div class="metric">
+          <div>
+            <div class="metric-label">Total students</div>
+            <div class="metric-value">{{ summary.total_students }}</div>
+          </div>
+          <div class="metric-trend">Live</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="metric">
+          <div>
+            <div class="metric-label">Average marks</div>
+            <div class="metric-value">{{ "%.2f"|format(summary.avg_marks) }}</div>
+          </div>
+          <div class="metric-trend">Overall</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="metric">
+          <div>
+            <div class="metric-label">Top student</div>
+            <div class="metric-value">{{ summary.top_student }}</div>
+          </div>
+          <div class="metric-trend">{{ "%.2f"|format(summary.top_score) }}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="metric">
+          <div>
+            <div class="metric-label">Best subject</div>
+            <div class="metric-value">{{ summary.best_subject }}</div>
+          </div>
+          <div class="metric-trend">{{ "%.1f"|format(summary.best_subject_score) }} avg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SUBJECTS + STATUS ==================== -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Subject-wise performance</h3>
+        <div class="bar-chart">
+          {% if summary.subject_summary %}
+            {% set max_val = summary.subject_summary[0].avg %}
+            {% for row in summary.subject_summary %}
+              <div class="bar-row">
+                <div class="bar-label">{{ row.subject }}</div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: {{ (row.avg / max_val * 100)|round(0, 'floor') if max_val else 0 }}%"></div>
+                </div>
+                <div class="bar-value">{{ "%.1f"|format(row.avg) }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p>No subject data available.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Student status</h3>
+        <div class="legend">
+          {% if summary.status_counts %}
+            {% for row in summary.status_counts %}
+              <div class="mini-stat">
+                <span>{{ row.status }}</span>
+                <strong>{{ row.count }}</strong>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="mini-stat"><span>No data</span><strong>0</strong></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== GRADE + CLASS ==================== -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Grade distribution</h3>
+        <div class="bar-chart">
+          {% if summary.grade_distribution %}
+            {% set grade_max = summary.grade_distribution|map(attribute='count')|max %}
+            {% for row in summary.grade_distribution %}
+              <div class="bar-row">
+                <div class="bar-label">{{ row.grade }}</div>
+                <div class="bar-track">
+                  <div class="bar-fill bar-fill-grade" style="width: {{ (row.count / grade_max * 100)|round(0, 'floor') if grade_max else 0 }}%"></div>
+                </div>
+                <div class="bar-value">{{ row.count }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p>No grade data available.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Class comparison</h3>
+        <div class="legend">
+          {% if summary.class_summary %}
+            {% for row in summary.class_summary %}
+              <div class="mini-stat">
+                <span>{{ row.class_name }} &middot; {{ row.count }} student(s)</span>
+                <strong>{{ "%.2f"|format(row.avg) }} avg</strong>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="mini-stat"><span>No data</span><strong>0</strong></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TABLE ==================== -->
+    <div class="card">
+      <div class="table-header">
+        <h3>Student records overview</h3>
+        <input
+          type="text"
+          id="searchBox"
+          class="search-box no-print"
+          placeholder="Search by name, class, subject..."
+        />
+      </div>
+
+      <div class="table-wrap">
+        <table id="studentTable">
+          <thead>
+            <tr>
+              <th class="sortable" data-type="text">Student <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="number">Age <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="text">Gender <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="text">Class <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="text">Subject <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="number">Marks <span class="sort-arrow"></span></th>
+              <th>Status</th>
+              <th>Career</th>
+              <th class="no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if summary.rows %}
+              {% for r in summary.rows %}
+                <tr>
+                  <td data-sort="{{ r.student_name }}">{{ r.student_name }}</td>
+                  <td data-sort="{{ r.age }}">{{ r.age }}</td>
+                  <td data-sort="{{ r.gender }}">{{ r.gender }}</td>
+                  <td data-sort="{{ r.class_name }}">{{ r.class_name }}</td>
+                  <td data-sort="{{ r.subject }}">{{ r.subject }}</td>
+                  <td data-sort="{{ r.marks }}">{{ "%.2f"|format(r.marks) }}</td>
+                  <td><span class="status-pill status-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
+                  <td>{{ r.future_career_plan or '—' }}</td>
+                  <td class="no-print actions-cell">
+                    <a href="{{ url_for('edit_student', student_pk=r.id) }}" class="action-btn edit-btn" title="Edit">Edit</a>
+                    <form method="POST" action="{{ url_for('delete_student_route', student_pk=r.id) }}"
+                          onsubmit="return confirm('Delete {{ r.student_name }}? This cannot be undone.');"
+                          style="display:inline;">
+                      <button type="submit" class="action-btn delete-btn" title="Delete">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="9">No student records available yet. Add one above to get started.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== FOOTER ACTIONS ==================== -->
+    <div class="footer no-print">
+      <a href="{{ url_for('export_csv') }}" class="footer-link">Download all students as CSV</a>
+      <button type="button" class="footer-link print-btn" onclick="window.print()">Print / Save as PDF</button>
+      <form method="POST" action="{{ url_for('reset_route') }}"
+            onsubmit="return confirm('Reset ALL student data? This cannot be undone.');"
+            style="display:inline;">
+        <button type="submit" class="footer-link reset-btn">Reset all data</button>
+      </form>
+    </div>
+
+  </div>
+
+  <footer class="app-footer no-print">
+    <div class="app-footer-inner">
+      <div class="footer-left">
+        <strong>Student Marks Analysis System</strong>
+        <span>Academic performance dashboard</span>
+      </div>
+      <div class="footer-center">Built with Flask &middot; SQLite</div>
+      <div class="footer-right">&copy; 2026 Monica &amp; Luana &middot; v1.0</div>
+    </div>
+  </footer>
+
+  <script>
+    // ---------------- Live search filter ----------------
+    const searchBox = document.getElementById('searchBox');
+    const table = document.getElementById('studentTable');
+    if (searchBox && table) {
+      searchBox.addEventListener('input', () => {
+        const q = searchBox.value.toLowerCase().trim();
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+          const text = row.innerText.toLowerCase();
+          row.style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+      });
+    }
+
+    // ---------------- Sortable columns ----------------
+    const headers = table ? table.querySelectorAll('th.sortable') : [];
+    let currentSort = { index: -1, asc: true };
+
+    headers.forEach((th, idx) => {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', () => {
+        const type = th.dataset.type || 'text';
+        const asc = !(currentSort.index === idx && currentSort.asc);
+        currentSort = { index: idx, asc };
+
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+          const av = a.children[idx].dataset.sort ?? a.children[idx].innerText;
+          const bv = b.children[idx].dataset.sort ?? b.children[idx].innerText;
+          let cmp;
+          if (type === 'number') {
+            cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+          } else {
+            cmp = String(av).toLowerCase().localeCompare(String(bv).toLowerCase());
+          }
+          return asc ? cmp : -cmp;
+        });
+        rows.forEach(r => tbody.appendChild(r));
+
+        headers.forEach(h => { h.querySelector('.sort-arrow').textContent = ''; });
+        th.querySelector('.sort-arrow').textContent = asc ? ' ▲' : ' ▼';
+      });
+    });
+  </script>
+</body>
+</html>

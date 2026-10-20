@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Student</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div>
+        <div class="title">Edit Student</div>
+        <div class="subtitle">Update the record for {{ student.student_name }}</div>
+      </div>
+      <div class="badge">ID #{{ student.id }}</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card form-card">
+      <form method="POST" action="{{ url_for('update_student', student_pk=student.id) }}">
+        <div class="form-grid">
+          <label>Student ID
+            <input name="student_id" value="{{ student.student_id }}" required />
+          </label>
+          <label>Student Name
+            <input name="student_name" value="{{ student.student_name }}" required />
+          </label>
+          <label>Age
+            <input name="age" type="number" min="5" max="25" value="{{ student.age }}" required />
+          </label>
+          <label>Gender
+            <select name="gender">
+              <option value="Male"   {% if student.gender == 'Male'   %}selected{% endif %}>Male</option>
+              <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Other"  {% if student.gender == 'Other'  %}selected{% endif %}>Other</option>
+            </select>
+          </label>
+          <label>Religion
+            <input name="religion" value="{{ student.religion or '' }}" />
+          </label>
+          <label>Class
+            <input name="class_name" value="{{ student.class_name }}" required />
+          </label>
+          <label>Subject
+            <input name="subject" value="{{ student.subject }}" required />
+          </label>
+          <label>Marks
+            <input name="marks" type="number" min="0" max="100" step="0.1" value="{{ student.marks }}" required />
+          </label>
+          <label>Favourite Subject
+            <input name="favourite_subject" value="{{ student.favourite_subject or '' }}" />
+          </label>
+          <label>Favourite Sports
+            <input name="favourite_sports" value="{{ student.favourite_sports or '' }}" />
+          </label>
+          <label>Favourite Teacher
+            <input name="favourite_teacher" value="{{ student.favourite_teacher or '' }}" />
+          </label>
+          <label>Future Career
+            <input name="future_career_plan" value="{{ student.future_career_plan or '' }}" />
+          </label>
+          <label>Study Period
+            <select name="study_period">
+              <option value=""            {% if not student.study_period %}selected{% endif %}>—</option>
+              <option value="Morning"     {% if student.study_period == 'Morning'   %}selected{% endif %}>Morning</option>
+              <option value="Afternoon"   {% if student.study_period == 'Afternoon' %}selected{% endif %}>Afternoon</option>
+              <option value="Evening"     {% if student.study_period == 'Evening'   %}selected{% endif %}>Evening</option>
+              <option value="Night"       {% if student.study_period == 'Night'     %}selected{% endif %}>Night</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit">Save Changes</button>
+          <a href="{{ url_for('index') }}" class="action-btn cancel-btn">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</body>
+</html>

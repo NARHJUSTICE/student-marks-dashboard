@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local database (Render creates its own)
+students.db
+*.db
+
+# Environment
+.env
+
+# macOS
+.DS_Store
