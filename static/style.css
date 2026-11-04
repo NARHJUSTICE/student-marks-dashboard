@@ -20,7 +20,14 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: var(--bg);
+  
+  /* Background Image Setup */
+  background-image: url('bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-color: var(--bg); /* Fallback if image doesn't load */
+  
   color: var(--text);
   -webkit-text-size-adjust: 100%;
 }
@@ -46,12 +53,15 @@ body {
   font-size: 1.9rem;
   font-weight: 800;
   line-height: 1.15;
+  /* Make title pop against the background */
+  text-shadow: 0 1px 3px rgba(255,255,255,0.8);
 }
 
 .subtitle {
   color: var(--muted);
   margin-top: 6px;
   font-size: 0.92rem;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
 }
 
 .badge {
@@ -68,7 +78,8 @@ body {
 /* ---------- Cards ---------- */
 
 .card {
-  background: var(--panel);
+  /* Frosted glass effect: 92% opaque white */
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 18px;
@@ -474,9 +485,10 @@ tbody tr:hover { background: #f8fafc; }
 .app-footer {
   margin-top: 24px;
   padding: 18px 12px 28px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.3); /* softened border for background */
+  color: #ffffff; /* white text to show against background */
   font-size: 0.82rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* shadow to make text readable */
 }
 
 .app-footer-inner {
@@ -496,24 +508,24 @@ tbody tr:hover { background: #f8fafc; }
 }
 
 .footer-left strong {
-  color: var(--text);
+  color: #ffffff;
   font-size: 0.88rem;
 }
 
 .footer-left span {
-  color: var(--muted);
+  color: #e2e8f0;
   font-size: 0.75rem;
 }
 
 .footer-center {
   text-align: center;
-  color: var(--muted);
+  color: #e2e8f0;
   font-size: 0.78rem;
 }
 
 .footer-right {
   text-align: right;
-  color: var(--muted);
+  color: #e2e8f0;
   font-size: 0.78rem;
 }
 
