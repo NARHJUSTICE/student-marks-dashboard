@@ -56,6 +56,31 @@
           <label>Marks
             <input name="marks" type="number" min="0" max="100" step="0.1" value="{{ student.marks }}" required />
           </label>
+          
+          <!-- NEW FIELDS -->
+          <label>Semester
+            <select name="semester">
+              <option value="" {% if not student.semester %}selected{% endif %}>—</option>
+              <option value="Sem1" {% if student.semester == 'Sem1' %}selected{% endif %}>Semester 1</option>
+              <option value="Sem2" {% if student.semester == 'Sem2' %}selected{% endif %}>Semester 2</option>
+              <option value="Sem3" {% if student.semester == 'Sem3' %}selected{% endif %}>Semester 3</option>
+            </select>
+          </label>
+          <label>Attendance Status
+            <select name="attendance_status">
+              <option value="" {% if not student.attendance_status %}selected{% endif %}>—</option>
+              <option value="Present" {% if student.attendance_status == 'Present' %}selected{% endif %}>Present</option>
+              <option value="Absent" {% if student.attendance_status == 'Absent' %}selected{% endif %}>Absent</option>
+              <option value="Late" {% if student.attendance_status == 'Late' %}selected{% endif %}>Late</option>
+              <option value="Medical-late" {% if student.attendance_status == 'Medical-late' %}selected{% endif %}>Medical-late</option>
+              <option value="Authorised Abs." {% if student.attendance_status == 'Authorised Abs.' %}selected{% endif %}>Authorised Abs.</option>
+              <option value="Early Dismissal" {% if student.attendance_status == 'Early Dismissal' %}selected{% endif %}>Early Dismissal</option>
+            </select>
+          </label>
+          <label>Attendance Days
+            <input name="attendance_days" type="number" min="1" value="{{ student.attendance_days or 1 }}" />
+          </label>
+
           <label>Favourite Subject
             <input name="favourite_subject" value="{{ student.favourite_subject or '' }}" />
           </label>

@@ -6,7 +6,7 @@ so this module has no dependency on Flask or the database — easy to reason
 about and easy to test.
 """
 
-from collections import Counter
+from collections import Counter, defaultdict
 
 
 def get_status(marks: float) -> str:
@@ -68,6 +68,8 @@ def _empty_summary() -> dict:
         "grade_distribution": [],
         "career_distribution": [],
         "class_summary": [],
+        "semester_summary": [],
+        "attendance_summary": [],
         "avg_study_hours": 0.0,
         "most_common_period": "Not stated",
         "most_common_interest": "Not stated",
@@ -149,6 +151,34 @@ def summarize(students: list[dict]) -> dict:
         reverse=True,
     )
 
+    # ---- Semester Performance (Grades per Semester) ----
+    sem_data = defaultdict(lambda: defaultdict(int))
+    for s in students:
+        sem = (s.get("semester") or "Unknown").strip()
+        if sem:
+            g = get_grade(float(s["marks"]))
+            sem_data[sem][g] += 1
+    
+    semester_summary = []
+    for sem, grades in sorted(sem_data.items()):
+        semester_summary.append({
+            "semester": sem,
+            "grades": [{"grade": g, "count": grades.get(g, 0)} for g in GRADE_ORDER]
+        })
+
+    # ---- Attendance Analysis ----
+    att_totals = defaultdict(int)
+    for s in students:
+        status = (s.get("attendance_status") or "Not Recorded").strip()
+        days = int(s.get("attendance_days") or 1)
+        att_totals[status] += days
+    
+    total_att_days = sum(att_totals.values()) or 1
+    attendance_summary = [
+        {"status": k, "count": v, "percent": round((v / total_att_days) * 100)}
+        for k, v in att_totals.items()
+    ]
+
     # ---- Study hours ----
     study_hours = [
         float(s["study_hours_per_day"])
@@ -160,7 +190,7 @@ def summarize(students: list[dict]) -> dict:
     most_common_period = _safe_mode([s.get("study_period") for s in students])
     most_common_interest = _safe_mode([s.get("student_interest") for s in students])
 
-    # ---- Rows for the table (attach status + grade) ----
+    # ---- Rows for the table ----
     rows = []
     for s in students[:12]:
         rows.append({
@@ -185,6 +215,8 @@ def summarize(students: list[dict]) -> dict:
         "grade_distribution": grade_distribution,
         "career_distribution": career_distribution,
         "class_summary": class_summary,
+        "semester_summary": semester_summary,
+        "attendance_summary": attendance_summary,
         "avg_study_hours": round(avg_study_hours, 2),
         "most_common_period": most_common_period,
         "most_common_interest": most_common_interest,

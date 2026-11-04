@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Marks Dashboard</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <!-- Load Chart.js for the new visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
@@ -27,10 +28,8 @@
     {% endwith %}
 
     <!-- ==================== ADD FORM ==================== -->
-    <details class="card form-card no-print">
-      <summary>
-        <h3>Add a Student</h3>
-      </summary>
+    <div class="card form-card no-print">
+      <h3>Add a Student</h3>
       <form method="POST" action="{{ url_for('add_student') }}">
         <div class="form-grid">
           <label>Student ID<input name="student_id" required /></label>
@@ -47,6 +46,29 @@
           <label>Class<input name="class_name" placeholder="e.g. CSE4" required /></label>
           <label>Subject<input name="subject" placeholder="e.g. ML" required /></label>
           <label>Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+          
+          <!-- NEW FIELDS -->
+          <label>Semester
+            <select name="semester">
+              <option value="">—</option>
+              <option value="Sem1">Semester 1</option>
+              <option value="Sem2">Semester 2</option>
+              <option value="Sem3">Semester 3</option>
+            </select>
+          </label>
+          <label>Attendance Status
+            <select name="attendance_status">
+              <option value="">—</option>
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Late">Late</option>
+              <option value="Medical-late">Medical-late</option>
+              <option value="Authorised Abs.">Authorised Abs.</option>
+              <option value="Early Dismissal">Early Dismissal</option>
+            </select>
+          </label>
+          <label>Attendance Days (Count)<input name="attendance_days" type="number" min="1" value="1" /></label>
+
           <label>Favourite Subject<input name="favourite_subject" placeholder="e.g. Maths" /></label>
           <label>Favourite Sports<input name="favourite_sports" placeholder="e.g. Football" /></label>
           <label>Favourite Teacher<input name="favourite_teacher" placeholder="e.g. Mr. Bello" /></label>
@@ -66,7 +88,7 @@
         </div>
       </form>
       <p class="hint">Only ID, Name, Age, Class, Subject, and Marks are required. Everything else is optional.</p>
-    </details>
+    </div>
 
     <!-- ==================== METRIC CARDS ==================== -->
     <div class="grid">
@@ -147,10 +169,35 @@
       </div>
     </div>
 
+    <!-- ==================== NEW CHARTS (Attendance & Semester) ==================== -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Attendance Analysis</h3>
+        <div class="chart-container" style="position: relative; height:300px; width:100%; display: flex; justify-content: center;">
+          {% if summary.attendance_summary %}
+            <canvas id="attendanceChart"></canvas>
+          {% else %}
+            <p>No attendance data available.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Student-wise Semester Performance (Grades)</h3>
+        <div class="chart-container" style="position: relative; height:300px; width:100%;">
+          {% if summary.semester_summary %}
+            <canvas id="semesterChart"></canvas>
+          {% else %}
+            <p>No semester data available.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== GRADE + CLASS ==================== -->
     <div class="two-col">
       <div class="card">
-        <h3>Grade distribution</h3>
+        <h3>Grade distribution (Overall)</h3>
         <div class="bar-chart">
           {% if summary.grade_distribution %}
             {% set grade_max = summary.grade_distribution|map(attribute='count')|max %}
@@ -203,8 +250,7 @@
           <thead>
             <tr>
               <th class="sortable" data-type="text">Student <span class="sort-arrow"></span></th>
-              <th class="sortable" data-type="number">Age <span class="sort-arrow"></span></th>
-              <th class="sortable" data-type="text">Gender <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="text">Semester <span class="sort-arrow"></span></th>
               <th class="sortable" data-type="text">Class <span class="sort-arrow"></span></th>
               <th class="sortable" data-type="text">Subject <span class="sort-arrow"></span></th>
               <th class="sortable" data-type="number">Marks <span class="sort-arrow"></span></th>
@@ -218,8 +264,7 @@
               {% for r in summary.rows %}
                 <tr>
                   <td data-sort="{{ r.student_name }}">{{ r.student_name }}</td>
-                  <td data-sort="{{ r.age }}">{{ r.age }}</td>
-                  <td data-sort="{{ r.gender }}">{{ r.gender }}</td>
+                  <td data-sort="{{ r.semester }}">{{ r.semester or '—' }}</td>
                   <td data-sort="{{ r.class_name }}">{{ r.class_name }}</td>
                   <td data-sort="{{ r.subject }}">{{ r.subject }}</td>
                   <td data-sort="{{ r.marks }}">{{ "%.2f"|format(r.marks) }}</td>
@@ -236,7 +281,7 @@
                 </tr>
               {% endfor %}
             {% else %}
-              <tr><td colspan="9">No student records available yet. Add one above to get started.</td></tr>
+              <tr><td colspan="8">No student records available yet. Add one above to get started.</td></tr>
             {% endif %}
           </tbody>
         </table>
@@ -312,6 +357,86 @@
         th.querySelector('.sort-arrow').textContent = asc ? ' ▲' : ' ▼';
       });
     });
+
+    // ---------------- CHART.JS: Attendance Pie Chart ----------------
+    const attendanceData = {{ summary.attendance_summary | tojson }};
+    if (attendanceData.length > 0) {
+      const attCtx = document.getElementById('attendanceChart').getContext('2d');
+      new Chart(attCtx, {
+        type: 'pie',
+        data: {
+          labels: attendanceData.map(d => d.status),
+          datasets: [{
+            data: attendanceData.map(d => d.count),
+            backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#60616f'],
+            hoverBorderColor: "rgba(234, 236, 244, 1)",
+          }],
+        },
+        options: {
+          maintainAspectRatio: false,
+          tooltips: {
+            backgroundColor: "rgb(255,255,255)",
+            bodyFontColor: "#858796",
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: false,
+            caretPadding: 10,
+            callbacks: {
+              label: function(tooltipItem, data) {
+                let total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                let value = data.datasets[0].data[tooltipItem.index];
+                let percent = Math.round((value / total) * 100);
+                return ' ' + data.labels[tooltipItem.index] + ': ' + value + ' days (' + percent + '%)';
+              }
+            }
+          },
+          legend: { display: true, position: 'right' }
+        }
+      });
+    }
+
+    // ---------------- CHART.JS: Semester Bar Chart ----------------
+    const semData = {{ summary.semester_summary | tojson }};
+    if (semData.length > 0) {
+      const semCtx = document.getElementById('semesterChart').getContext('2d');
+      
+      // Extract all unique grades for the legend
+      const uniqueGrades = [...new Set(semData.flatMap(s => s.grades.map(g => g.grade)))];
+      
+      const datasets = uniqueGrades.map(grade => ({
+        label: grade,
+        backgroundColor: grade.includes('A') ? '#1cc88a' : 
+                         grade.includes('B') ? '#4e73df' : 
+                         grade.includes('C') ? '#f6c23e' : 
+                         grade.includes('D') ? '#e74a3b' : '#858796',
+        data: semData.map(sem => {
+           const found = sem.grades.find(g => g.grade === grade);
+           return found ? found.count : 0;
+        })
+      }));
+
+      new Chart(semCtx, {
+        type: 'bar',
+        data: {
+          labels: semData.map(d => d.semester),
+          datasets: datasets
+        },
+        options: {
+          maintainAspectRatio: false,
+          scales: {
+            xAxes: [{ gridLines: { display: false }, ticks: { fontColor: '#858796' } }],
+            yAxes: [{
+              ticks: { beginAtZero: true, precision: 0, fontColor: '#858796' },
+              gridLines: { borderDash: [2], borderColor: '#e3e6f0' }
+            }]
+          },
+          legend: { display: true, position: 'top' }
+        }
+      });
+    }
   </script>
 </body>
 </html>

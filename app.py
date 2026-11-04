@@ -1,15 +1,5 @@
 """
 Flask entry point for the Student Marks Dashboard.
-
-Routes:
-    GET  /              -> dashboard (all students + stats)
-    POST /add           -> validate & insert one student, redirect back
-    GET  /edit/<id>     -> show edit form for one student
-    POST /update/<id>   -> save edits, redirect to dashboard
-    POST /delete/<id>   -> delete one student, redirect back
-    POST /reset         -> wipe all students, redirect back
-    GET  /export        -> download all students as CSV
-    GET  /healthz       -> simple health check for Render
 """
 
 import csv
@@ -18,7 +8,7 @@ import os
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, Response, abort
+    url_for, flash, Response
 )
 
 import db
@@ -92,6 +82,11 @@ def validate_student(form) -> tuple[dict, list[str]]:
     favourite_teacher = _opt(form, "favourite_teacher")
     study_period = _opt(form, "study_period")
     career = _opt(form, "future_career_plan")
+    
+    # ---- New Fields ----
+    semester = _opt(form, "semester")
+    attendance_status = _opt(form, "attendance_status")
+    attendance_days = _to_int(form.get("attendance_days"), default=1)
 
     cleaned = {
         "student_id": student_id,
@@ -114,6 +109,9 @@ def validate_student(form) -> tuple[dict, list[str]]:
         "study_hours_per_subject": None,
         "study_period": study_period,
         "lifestyle": None,
+        "semester": semester,
+        "attendance_status": attendance_status,
+        "attendance_days": attendance_days
     }
     return cleaned, errors
 
@@ -222,7 +220,8 @@ def export_csv():
 
     headers = [
         "student_id", "student_name", "age", "gender", "class_name",
-        "subject", "marks", "future_career_plan", "created_at",
+        "subject", "marks", "future_career_plan", "semester", 
+        "attendance_status", "attendance_days", "created_at",
     ]
     writer.writerow(headers)
     for s in students:

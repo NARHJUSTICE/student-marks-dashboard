@@ -20,6 +20,7 @@ STUDENT_COLUMNS = [
     "student_interest", "favourite_subject", "favourite_sports",
     "favourite_teacher", "future_career_plan", "study_hours_per_day",
     "study_hours_per_subject", "study_period", "lifestyle",
+    "semester", "attendance_status", "attendance_days"
 ]
 
 SCHEMA = """
@@ -45,6 +46,9 @@ CREATE TABLE IF NOT EXISTS students (
     study_hours_per_subject REAL,
     study_period TEXT,
     lifestyle TEXT,
+    semester TEXT,
+    attendance_status TEXT,
+    attendance_days INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 """
