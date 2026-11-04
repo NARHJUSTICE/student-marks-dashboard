@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Marks Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <!-- Load Chart.js for the new visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -49,8 +48,6 @@
             </label>
             <label>Religion<input name="religion" placeholder="e.g. Christianity" /></label>
             <label>Class<input name="class_name" placeholder="e.g. CSE4" required /></label>
-            <label>Subject<input name="subject" placeholder="e.g. ML" required /></label>
-            <label>Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
             
             <label>Semester
               <select name="semester">
@@ -71,7 +68,7 @@
                 <option value="Early Dismissal">Early Dismissal</option>
               </select>
             </label>
-            <label>Attendance Days (Count)<input name="attendance_days" type="number" min="1" value="1" /></label>
+            <label>Attendance Days<input name="attendance_days" type="number" min="1" value="1" /></label>
 
             <label>Favourite Subject<input name="favourite_subject" placeholder="e.g. Maths" /></label>
             <label>Favourite Sports<input name="favourite_sports" placeholder="e.g. Football" /></label>
@@ -87,11 +84,26 @@
               </select>
             </label>
           </div>
+
+          <!-- DYNAMIC SUBJECTS SECTION -->
+          <div class="subjects-section" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 10px;">
+            <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 0.95rem;">Subjects & Marks</h4>
+            <div id="subjects-container">
+              <!-- Default row -->
+              <div class="subject-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                <label style="flex: 1;">Subject<input name="subject" placeholder="e.g. ML" required /></label>
+                <label style="flex: 1;">Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+                <button type="button" class="remove-subject-btn action-btn delete-btn" style="display:none; height: 42px;" onclick="this.parentElement.remove()">Remove</button>
+              </div>
+            </div>
+            <button type="button" class="action-btn" style="margin-top: 5px; background: #e2e8f0; color: #0f172a;" onclick="addSubjectRow()">+ Add Another Subject</button>
+          </div>
+
           <div class="actions">
-            <button type="submit">Add Student</button>
+            <button type="submit">Save Student</button>
           </div>
         </form>
-        <p class="hint">Only ID, Name, Age, Class, Subject, and Marks are required. Everything else is optional.</p>
+        <p class="hint">Only ID, Name, Age, Class, and at least one Subject with Marks are required.</p>
       </div>
     </details>
 
@@ -174,7 +186,7 @@
       </div>
     </div>
 
-    <!-- ==================== NEW CHARTS (Attendance & Semester) ==================== -->
+    <!-- ==================== NEW CHARTS ==================== -->
     <div class="two-col">
       <div class="card">
         <h3>Attendance Analysis</h3>
@@ -242,12 +254,7 @@
     <div class="card">
       <div class="table-header">
         <h3>Student records overview</h3>
-        <input
-          type="text"
-          id="searchBox"
-          class="search-box no-print"
-          placeholder="Search by name, class, subject..."
-        />
+        <input type="text" id="searchBox" class="search-box no-print" placeholder="Search..." />
       </div>
 
       <div class="table-wrap">
@@ -257,8 +264,7 @@
               <th class="sortable" data-type="text">Student <span class="sort-arrow"></span></th>
               <th class="sortable" data-type="text">Semester <span class="sort-arrow"></span></th>
               <th class="sortable" data-type="text">Class <span class="sort-arrow"></span></th>
-              <th class="sortable" data-type="text">Subject <span class="sort-arrow"></span></th>
-              <th class="sortable" data-type="number">Marks <span class="sort-arrow"></span></th>
+              <th class="sortable" data-type="text">Subjects & Marks <span class="sort-arrow"></span></th>
               <th>Status</th>
               <th>Career</th>
               <th class="no-print">Actions</th>
@@ -271,53 +277,69 @@
                   <td data-sort="{{ r.student_name }}">{{ r.student_name }}</td>
                   <td data-sort="{{ r.semester }}">{{ r.semester or '—' }}</td>
                   <td data-sort="{{ r.class_name }}">{{ r.class_name }}</td>
-                  <td data-sort="{{ r.subject }}">{{ r.subject }}</td>
-                  <td data-sort="{{ r.marks }}">{{ "%.2f"|format(r.marks) }}</td>
+                  <td>
+                    {% for subj in r.subjects %}
+                      <span style="display:inline-block; background:#e2e8f0; padding:4px 8px; border-radius:6px; font-size:0.8rem; margin-right:4px; margin-bottom:4px;">
+                        {{ subj.subject }}: <strong>{{ subj.marks }}</strong>
+                      </span>
+                    {% endfor %}
+                  </td>
                   <td><span class="status-pill status-{{ r.status|lower|replace(' ', '-') }}">{{ r.status }}</span></td>
                   <td>{{ r.future_career_plan or '—' }}</td>
                   <td class="no-print actions-cell">
-                    <a href="{{ url_for('edit_student', student_pk=r.id) }}" class="action-btn edit-btn" title="Edit">Edit</a>
-                    <form method="POST" action="{{ url_for('delete_student_route', student_pk=r.id) }}"
-                          onsubmit="return confirm('Delete {{ r.student_name }}? This cannot be undone.');"
-                          style="display:inline;">
-                      <button type="submit" class="action-btn delete-btn" title="Delete">Delete</button>
+                    <a href="{{ url_for('edit_student', student_pk=r.id) }}" class="action-btn edit-btn">Edit</a>
+                    <form method="POST" action="{{ url_for('delete_student_route', student_pk=r.id) }}" onsubmit="return confirm('Delete {{ r.student_name }}?');" style="display:inline;">
+                      <button type="submit" class="action-btn delete-btn">Delete</button>
                     </form>
                   </td>
                 </tr>
               {% endfor %}
             {% else %}
-              <tr><td colspan="8">No student records available yet. Add one above to get started.</td></tr>
+              <tr><td colspan="7">No student records available yet.</td></tr>
             {% endif %}
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ==================== FOOTER ACTIONS ==================== -->
     <div class="footer no-print">
-      <a href="{{ url_for('export_csv') }}" class="footer-link">Download all students as CSV</a>
+      <a href="{{ url_for('export_csv') }}" class="footer-link">Download CSV</a>
       <button type="button" class="footer-link print-btn" onclick="window.print()">Print / Save as PDF</button>
-      <form method="POST" action="{{ url_for('reset_route') }}"
-            onsubmit="return confirm('Reset ALL student data? This cannot be undone.');"
-            style="display:inline;">
+      <form method="POST" action="{{ url_for('reset_route') }}" onsubmit="return confirm('Reset ALL data?');" style="display:inline;">
         <button type="submit" class="footer-link reset-btn">Reset all data</button>
       </form>
     </div>
-
   </div>
 
   <footer class="app-footer no-print">
     <div class="app-footer-inner">
-      <div class="footer-left">
-        <strong>Student Marks Analysis System</strong>
-        <span>Academic performance dashboard</span>
-      </div>
+      <div class="footer-left"><strong>Student Marks Analysis System</strong><span>Academic performance dashboard</span></div>
       <div class="footer-center">Built with Flask &middot; SQLite</div>
       <div class="footer-right">&copy; 2026 Monica &amp; Luana &middot; v1.0</div>
     </div>
   </footer>
 
   <script>
+    // --- Dynamic Subject Form Logic ---
+    function addSubjectRow() {
+      const container = document.getElementById('subjects-container');
+      const row = document.createElement('div');
+      row.className = 'subject-row';
+      row.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+      row.innerHTML = `
+        <label style="flex: 1;">Subject<input name="subject" placeholder="e.g. Maths" required /></label>
+        <label style="flex: 1;">Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+        <button type="button" class="remove-subject-btn action-btn delete-btn" style="height: 42px;" onclick="this.parentElement.remove()">Remove</button>
+      `;
+      container.appendChild(row);
+      
+      // Show remove button on the first row if we now have more than one
+      const rows = container.querySelectorAll('.subject-row');
+      if (rows.length > 1) {
+        rows[0].querySelector('.remove-subject-btn').style.display = 'block';
+      }
+    }
+
     // ---------------- Live search filter ----------------
     const searchBox = document.getElementById('searchBox');
     const table = document.getElementById('studentTable');
@@ -326,8 +348,7 @@
         const q = searchBox.value.toLowerCase().trim();
         const rows = table.querySelectorAll('tbody tr');
         rows.forEach(row => {
-          const text = row.innerText.toLowerCase();
-          row.style.display = (!q || text.includes(q)) ? '' : 'none';
+          row.style.display = (!q || row.innerText.toLowerCase().includes(q)) ? '' : 'none';
         });
       });
     }
@@ -335,30 +356,22 @@
     // ---------------- Sortable columns ----------------
     const headers = table ? table.querySelectorAll('th.sortable') : [];
     let currentSort = { index: -1, asc: true };
-
     headers.forEach((th, idx) => {
       th.style.cursor = 'pointer';
       th.addEventListener('click', () => {
         const type = th.dataset.type || 'text';
         const asc = !(currentSort.index === idx && currentSort.asc);
         currentSort = { index: idx, asc };
-
         const tbody = table.querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
         rows.sort((a, b) => {
           const av = a.children[idx].dataset.sort ?? a.children[idx].innerText;
           const bv = b.children[idx].dataset.sort ?? b.children[idx].innerText;
-          let cmp;
-          if (type === 'number') {
-            cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
-          } else {
-            cmp = String(av).toLowerCase().localeCompare(String(bv).toLowerCase());
-          }
+          let cmp = type === 'number' ? (parseFloat(av) || 0) - (parseFloat(bv) || 0) : String(av).toLowerCase().localeCompare(String(bv).toLowerCase());
           return asc ? cmp : -cmp;
         });
         rows.forEach(r => tbody.appendChild(r));
-
-        headers.forEach(h => { h.querySelector('.sort-arrow').textContent = ''; });
+        headers.forEach(h => h.querySelector('.sort-arrow').textContent = '');
         th.querySelector('.sort-arrow').textContent = asc ? ' ▲' : ' ▼';
       });
     });
@@ -374,32 +387,10 @@
           datasets: [{
             data: attendanceData.map(d => d.count),
             backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
-            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#60616f'],
-            hoverBorderColor: "rgba(234, 236, 244, 1)",
-          }],
+            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#60616f']
+          }]
         },
-        options: {
-          maintainAspectRatio: false,
-          tooltips: {
-            backgroundColor: "rgb(255,255,255)",
-            bodyFontColor: "#858796",
-            borderColor: '#dddfeb',
-            borderWidth: 1,
-            xPadding: 15,
-            yPadding: 15,
-            displayColors: false,
-            caretPadding: 10,
-            callbacks: {
-              label: function(tooltipItem, data) {
-                let total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-                let value = data.datasets[0].data[tooltipItem.index];
-                let percent = Math.round((value / total) * 100);
-                return ' ' + data.labels[tooltipItem.index] + ': ' + value + ' days (' + percent + '%)';
-              }
-            }
-          },
-          legend: { display: true, position: 'right' }
-        }
+        options: { maintainAspectRatio: false, legend: { display: true, position: 'right' } }
       });
     }
 
@@ -407,38 +398,19 @@
     const semData = {{ summary.semester_summary | tojson }};
     if (semData.length > 0) {
       const semCtx = document.getElementById('semesterChart').getContext('2d');
-      
       const uniqueGrades = [...new Set(semData.flatMap(s => s.grades.map(g => g.grade)))];
-      
       const datasets = uniqueGrades.map(grade => ({
         label: grade,
-        backgroundColor: grade.includes('A') ? '#1cc88a' : 
-                         grade.includes('B') ? '#4e73df' : 
-                         grade.includes('C') ? '#f6c23e' : 
-                         grade.includes('D') ? '#e74a3b' : '#858796',
+        backgroundColor: grade.includes('A') ? '#1cc88a' : grade.includes('B') ? '#4e73df' : grade.includes('C') ? '#f6c23e' : grade.includes('D') ? '#e74a3b' : '#858796',
         data: semData.map(sem => {
            const found = sem.grades.find(g => g.grade === grade);
            return found ? found.count : 0;
         })
       }));
-
       new Chart(semCtx, {
         type: 'bar',
-        data: {
-          labels: semData.map(d => d.semester),
-          datasets: datasets
-        },
-        options: {
-          maintainAspectRatio: false,
-          scales: {
-            xAxes: [{ gridLines: { display: false }, ticks: { fontColor: '#858796' } }],
-            yAxes: [{
-              ticks: { beginAtZero: true, precision: 0, fontColor: '#858796' },
-              gridLines: { borderDash: [2], borderColor: '#e3e6f0' }
-            }]
-          },
-          legend: { display: true, position: 'top' }
-        }
+        data: { labels: semData.map(d => d.semester), datasets: datasets },
+        options: { maintainAspectRatio: false, legend: { display: true, position: 'top' } }
       });
     }
   </script>

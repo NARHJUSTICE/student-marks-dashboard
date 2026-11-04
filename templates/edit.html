@@ -8,7 +8,6 @@
 </head>
 <body>
   <div class="container">
-
     <div class="header">
       <div>
         <div class="title">Edit Student</div>
@@ -28,15 +27,9 @@
     <div class="card form-card">
       <form method="POST" action="{{ url_for('update_student', student_pk=student.id) }}">
         <div class="form-grid">
-          <label>Student ID
-            <input name="student_id" value="{{ student.student_id }}" required />
-          </label>
-          <label>Student Name
-            <input name="student_name" value="{{ student.student_name }}" required />
-          </label>
-          <label>Age
-            <input name="age" type="number" min="5" max="25" value="{{ student.age }}" required />
-          </label>
+          <label>Student ID<input name="student_id" value="{{ student.student_id }}" required /></label>
+          <label>Student Name<input name="student_name" value="{{ student.student_name }}" required /></label>
+          <label>Age<input name="age" type="number" min="5" max="25" value="{{ student.age }}" required /></label>
           <label>Gender
             <select name="gender">
               <option value="Male"   {% if student.gender == 'Male'   %}selected{% endif %}>Male</option>
@@ -44,20 +37,9 @@
               <option value="Other"  {% if student.gender == 'Other'  %}selected{% endif %}>Other</option>
             </select>
           </label>
-          <label>Religion
-            <input name="religion" value="{{ student.religion or '' }}" />
-          </label>
-          <label>Class
-            <input name="class_name" value="{{ student.class_name }}" required />
-          </label>
-          <label>Subject
-            <input name="subject" value="{{ student.subject }}" required />
-          </label>
-          <label>Marks
-            <input name="marks" type="number" min="0" max="100" step="0.1" value="{{ student.marks }}" required />
-          </label>
+          <label>Religion<input name="religion" value="{{ student.religion or '' }}" /></label>
+          <label>Class<input name="class_name" value="{{ student.class_name }}" required /></label>
           
-          <!-- NEW FIELDS -->
           <label>Semester
             <select name="semester">
               <option value="" {% if not student.semester %}selected{% endif %}>—</option>
@@ -77,22 +59,12 @@
               <option value="Early Dismissal" {% if student.attendance_status == 'Early Dismissal' %}selected{% endif %}>Early Dismissal</option>
             </select>
           </label>
-          <label>Attendance Days
-            <input name="attendance_days" type="number" min="1" value="{{ student.attendance_days or 1 }}" />
-          </label>
+          <label>Attendance Days<input name="attendance_days" type="number" min="1" value="{{ student.attendance_days or 1 }}" /></label>
 
-          <label>Favourite Subject
-            <input name="favourite_subject" value="{{ student.favourite_subject or '' }}" />
-          </label>
-          <label>Favourite Sports
-            <input name="favourite_sports" value="{{ student.favourite_sports or '' }}" />
-          </label>
-          <label>Favourite Teacher
-            <input name="favourite_teacher" value="{{ student.favourite_teacher or '' }}" />
-          </label>
-          <label>Future Career
-            <input name="future_career_plan" value="{{ student.future_career_plan or '' }}" />
-          </label>
+          <label>Favourite Subject<input name="favourite_subject" value="{{ student.favourite_subject or '' }}" /></label>
+          <label>Favourite Sports<input name="favourite_sports" value="{{ student.favourite_sports or '' }}" /></label>
+          <label>Favourite Teacher<input name="favourite_teacher" value="{{ student.favourite_teacher or '' }}" /></label>
+          <label>Future Career<input name="future_career_plan" value="{{ student.future_career_plan or '' }}" /></label>
           <label>Study Period
             <select name="study_period">
               <option value=""            {% if not student.study_period %}selected{% endif %}>—</option>
@@ -104,13 +76,54 @@
           </label>
         </div>
 
+        <div class="subjects-section" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 10px;">
+          <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 0.95rem;">Subjects & Marks</h4>
+          <div id="subjects-container">
+            {% if student.subjects %}
+              {% for subj in student.subjects %}
+                <div class="subject-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                  <label style="flex: 1;">Subject<input name="subject" value="{{ subj.subject }}" required /></label>
+                  <label style="flex: 1;">Marks<input name="marks" type="number" min="0" max="100" step="0.1" value="{{ subj.marks }}" required /></label>
+                  <button type="button" class="remove-subject-btn action-btn delete-btn" style="height: 42px;" onclick="this.parentElement.remove()">Remove</button>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="subject-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                <label style="flex: 1;">Subject<input name="subject" required /></label>
+                <label style="flex: 1;">Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+                <button type="button" class="remove-subject-btn action-btn delete-btn" style="display:none; height: 42px;" onclick="this.parentElement.remove()">Remove</button>
+              </div>
+            {% endif %}
+          </div>
+          <button type="button" class="action-btn" style="margin-top: 5px; background: #e2e8f0; color: #0f172a;" onclick="addSubjectRow()">+ Add Another Subject</button>
+        </div>
+
         <div class="actions">
           <button type="submit">Save Changes</button>
           <a href="{{ url_for('index') }}" class="action-btn cancel-btn">Cancel</a>
         </div>
       </form>
     </div>
-
   </div>
+
+  <script>
+    function addSubjectRow() {
+      const container = document.getElementById('subjects-container');
+      const row = document.createElement('div');
+      row.className = 'subject-row';
+      row.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+      row.innerHTML = `
+        <label style="flex: 1;">Subject<input name="subject" required /></label>
+        <label style="flex: 1;">Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+        <button type="button" class="remove-subject-btn action-btn delete-btn" style="height: 42px;" onclick="this.parentElement.remove()">Remove</button>
+      `;
+      container.appendChild(row);
+      
+      const rows = container.querySelectorAll('.subject-row');
+      if (rows.length > 1) {
+        rows[0].querySelector('.remove-subject-btn').style.display = 'block';
+      }
+    }
+  </script>
 </body>
 </html>

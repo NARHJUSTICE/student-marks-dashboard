@@ -49,17 +49,15 @@ def _opt(form, key):
     return v or None
 
 
-def validate_student(form) -> tuple[dict, list[str]]:
-    """Return (cleaned_data, errors). cleaned_data is safe to insert/update."""
+def validate_student(form) -> tuple[dict, list[dict], list[str]]:
+    """Return (cleaned_student_data, subjects_list, errors)."""
     errors: list[str] = []
 
     # ---- Required fields ----
     student_id = (form.get("student_id") or "").strip()
     student_name = (form.get("student_name") or "").strip()
     class_name = (form.get("class_name") or "").strip().upper()
-    subject = (form.get("subject") or "").strip().upper()
     age = _to_int(form.get("age"))
-    marks = _to_float(form.get("marks"))
 
     if not student_id:
         errors.append("Student ID is required.")
@@ -67,12 +65,26 @@ def validate_student(form) -> tuple[dict, list[str]]:
         errors.append("Student name is required.")
     if not class_name:
         errors.append("Class is required.")
-    if not subject:
-        errors.append("Subject is required.")
     if age is None or not (5 <= age <= 25):
         errors.append("Age must be a number between 5 and 25.")
-    if marks is None or not (0 <= marks <= 100):
-        errors.append("Marks must be a number between 0 and 100.")
+
+    # ---- Parse Multiple Subjects ----
+    # The HTML form sends lists for 'subject[]' and 'marks[]'
+    subjects_raw = form.getlist("subject")
+    marks_raw = form.getlist("marks")
+    
+    subjects_list = []
+    for subj, mark_str in zip(subjects_raw, marks_raw):
+        subj = subj.strip().upper()
+        mark = _to_float(mark_str)
+        if subj and mark is not None:
+            if not (0 <= mark <= 100):
+                errors.append(f"Marks for {subj} must be between 0 and 100.")
+            else:
+                subjects_list.append({"subject": subj, "marks": mark})
+
+    if not subjects_list:
+        errors.append("At least one Subject and Marks is required.")
 
     # ---- Optional fields ----
     gender = (form.get("gender") or "").strip() or None
@@ -82,8 +94,6 @@ def validate_student(form) -> tuple[dict, list[str]]:
     favourite_teacher = _opt(form, "favourite_teacher")
     study_period = _opt(form, "study_period")
     career = _opt(form, "future_career_plan")
-    
-    # ---- New Fields ----
     semester = _opt(form, "semester")
     attendance_status = _opt(form, "attendance_status")
     attendance_days = _to_int(form.get("attendance_days"), default=1)
@@ -98,8 +108,6 @@ def validate_student(form) -> tuple[dict, list[str]]:
         "state": None,
         "height_cm": None,
         "class_name": class_name,
-        "subject": subject,
-        "marks": marks,
         "student_interest": None,
         "favourite_subject": favourite_subject,
         "favourite_sports": favourite_sports,
@@ -113,7 +121,7 @@ def validate_student(form) -> tuple[dict, list[str]]:
         "attendance_status": attendance_status,
         "attendance_days": attendance_days
     }
-    return cleaned, errors
+    return cleaned, subjects_list, errors
 
 
 # ------------------------------------------------------------------
@@ -129,14 +137,14 @@ def index():
 
 @app.route("/add", methods=["POST"])
 def add_student():
-    cleaned, errors = validate_student(request.form)
+    cleaned, subjects, errors = validate_student(request.form)
     if errors:
         for e in errors:
             flash(e, "error")
         return redirect(url_for("index"))
 
     try:
-        db.insert_student(cleaned)
+        db.insert_student(cleaned, subjects)
         flash(f"Added {cleaned['student_name']}.", "success")
     except Exception as e:
         flash(f"Could not save student: {e}", "error")
@@ -163,14 +171,14 @@ def update_student(student_pk):
         flash("Student not found.", "error")
         return redirect(url_for("index"))
 
-    cleaned, errors = validate_student(request.form)
+    cleaned, subjects, errors = validate_student(request.form)
     if errors:
         for e in errors:
             flash(e, "error")
         return redirect(url_for("edit_student", student_pk=student_pk))
 
     try:
-        db.update_student(student_pk, cleaned)
+        db.update_student(student_pk, cleaned, subjects)
         flash(f"Updated {cleaned['student_name']}.", "success")
     except Exception as e:
         flash(f"Could not update student: {e}", "error")
@@ -218,6 +226,7 @@ def export_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
+    # We now export one row per subject
     headers = [
         "student_id", "student_name", "age", "gender", "class_name",
         "subject", "marks", "future_career_plan", "semester", 
@@ -225,7 +234,21 @@ def export_csv():
     ]
     writer.writerow(headers)
     for s in students:
-        writer.writerow([s.get(h, "") for h in headers])
+        if s["subjects"]:
+            for subj in s["subjects"]:
+                writer.writerow([
+                    s.get("student_id"), s.get("student_name"), s.get("age"), 
+                    s.get("gender"), s.get("class_name"), subj["subject"], subj["marks"],
+                    s.get("future_career_plan"), s.get("semester"), 
+                    s.get("attendance_status"), s.get("attendance_days"), s.get("created_at")
+                ])
+        else:
+             writer.writerow([
+                s.get("student_id"), s.get("student_name"), s.get("age"), 
+                s.get("gender"), s.get("class_name"), "", "",
+                s.get("future_career_plan"), s.get("semester"), 
+                s.get("attendance_status"), s.get("attendance_days"), s.get("created_at")
+            ])
 
     csv_bytes = output.getvalue().encode("utf-8")
     return Response(
