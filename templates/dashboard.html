@@ -27,68 +27,73 @@
       {% endif %}
     {% endwith %}
 
-    <!-- ==================== ADD FORM ==================== -->
-    <div class="card form-card no-print">
-      <h3>Add a Student</h3>
-      <form method="POST" action="{{ url_for('add_student') }}">
-        <div class="form-grid">
-          <label>Student ID<input name="student_id" required /></label>
-          <label>Student Name<input name="student_name" required /></label>
-          <label>Age<input name="age" type="number" min="5" max="25" required /></label>
-          <label>Gender
-            <select name="gender">
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </label>
-          <label>Religion<input name="religion" placeholder="e.g. Christianity" /></label>
-          <label>Class<input name="class_name" placeholder="e.g. CSE4" required /></label>
-          <label>Subject<input name="subject" placeholder="e.g. ML" required /></label>
-          <label>Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
-          
-          <!-- NEW FIELDS -->
-          <label>Semester
-            <select name="semester">
-              <option value="">—</option>
-              <option value="Sem1">Semester 1</option>
-              <option value="Sem2">Semester 2</option>
-              <option value="Sem3">Semester 3</option>
-            </select>
-          </label>
-          <label>Attendance Status
-            <select name="attendance_status">
-              <option value="">—</option>
-              <option value="Present">Present</option>
-              <option value="Absent">Absent</option>
-              <option value="Late">Late</option>
-              <option value="Medical-late">Medical-late</option>
-              <option value="Authorised Abs.">Authorised Abs.</option>
-              <option value="Early Dismissal">Early Dismissal</option>
-            </select>
-          </label>
-          <label>Attendance Days (Count)<input name="attendance_days" type="number" min="1" value="1" /></label>
+    <!-- ==================== ADD FORM (ACCORDION) ==================== -->
+    <details class="card form-card no-print" {% if request.args.get('open_form') %}open{% endif %}>
+      <summary class="accordion-header">
+        <h3>Add a Student</h3>
+        <span class="accordion-icon">+</span>
+      </summary>
+      
+      <div class="accordion-content">
+        <form method="POST" action="{{ url_for('add_student') }}">
+          <div class="form-grid">
+            <label>Student ID<input name="student_id" required /></label>
+            <label>Student Name<input name="student_name" required /></label>
+            <label>Age<input name="age" type="number" min="5" max="25" required /></label>
+            <label>Gender
+              <select name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label>Religion<input name="religion" placeholder="e.g. Christianity" /></label>
+            <label>Class<input name="class_name" placeholder="e.g. CSE4" required /></label>
+            <label>Subject<input name="subject" placeholder="e.g. ML" required /></label>
+            <label>Marks<input name="marks" type="number" min="0" max="100" step="0.1" required /></label>
+            
+            <label>Semester
+              <select name="semester">
+                <option value="">—</option>
+                <option value="Sem1">Semester 1</option>
+                <option value="Sem2">Semester 2</option>
+                <option value="Sem3">Semester 3</option>
+              </select>
+            </label>
+            <label>Attendance Status
+              <select name="attendance_status">
+                <option value="">—</option>
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+                <option value="Medical-late">Medical-late</option>
+                <option value="Authorised Abs.">Authorised Abs.</option>
+                <option value="Early Dismissal">Early Dismissal</option>
+              </select>
+            </label>
+            <label>Attendance Days (Count)<input name="attendance_days" type="number" min="1" value="1" /></label>
 
-          <label>Favourite Subject<input name="favourite_subject" placeholder="e.g. Maths" /></label>
-          <label>Favourite Sports<input name="favourite_sports" placeholder="e.g. Football" /></label>
-          <label>Favourite Teacher<input name="favourite_teacher" placeholder="e.g. Mr. Bello" /></label>
-          <label>Future Career<input name="future_career_plan" placeholder="e.g. Hacker" /></label>
-          <label>Study Period
-            <select name="study_period">
-              <option value="">—</option>
-              <option value="Morning">Morning</option>
-              <option value="Afternoon">Afternoon</option>
-              <option value="Evening">Evening</option>
-              <option value="Night">Night</option>
-            </select>
-          </label>
-        </div>
-        <div class="actions">
-          <button type="submit">Add Student</button>
-        </div>
-      </form>
-      <p class="hint">Only ID, Name, Age, Class, Subject, and Marks are required. Everything else is optional.</p>
-    </div>
+            <label>Favourite Subject<input name="favourite_subject" placeholder="e.g. Maths" /></label>
+            <label>Favourite Sports<input name="favourite_sports" placeholder="e.g. Football" /></label>
+            <label>Favourite Teacher<input name="favourite_teacher" placeholder="e.g. Mr. Bello" /></label>
+            <label>Future Career<input name="future_career_plan" placeholder="e.g. Hacker" /></label>
+            <label>Study Period
+              <select name="study_period">
+                <option value="">—</option>
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Evening">Evening</option>
+                <option value="Night">Night</option>
+              </select>
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit">Add Student</button>
+          </div>
+        </form>
+        <p class="hint">Only ID, Name, Age, Class, Subject, and Marks are required. Everything else is optional.</p>
+      </div>
+    </details>
 
     <!-- ==================== METRIC CARDS ==================== -->
     <div class="grid">
@@ -403,7 +408,6 @@
     if (semData.length > 0) {
       const semCtx = document.getElementById('semesterChart').getContext('2d');
       
-      // Extract all unique grades for the legend
       const uniqueGrades = [...new Set(semData.flatMap(s => s.grades.map(g => g.grade)))];
       
       const datasets = uniqueGrades.map(grade => ({
